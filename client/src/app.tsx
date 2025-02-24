@@ -7,6 +7,7 @@ import { truncateFileName } from './lib/utils';
 import { useFaceLandmarkDetection } from './hooks/useFaceLandmarkDetection';
 import { About } from './components/About';
 import { Spinner } from './components/Spinner';
+import { EmotionPresets } from './components/EmotionPresets';
 import { useFacePokeAPI } from './hooks/useFacePokeAPI';
 import { Layout } from './layout';
 import { useMainStore } from './hooks/useMainStore';
@@ -167,6 +168,7 @@ export function App() {
                 Show face markers
               </label>
             </div>}
+            <EmotionPresets />
           </div>
           {previewImage && (
             <div className="mt-2 relative shadow-2xl rounded-xl overflow-hidden">

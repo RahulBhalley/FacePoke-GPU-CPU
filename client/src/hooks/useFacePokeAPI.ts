@@ -29,6 +29,13 @@ export function useFacePokeAPI() {
     };
   }, []);
 
+  const handleCoordinateChange = (x: number, y: number) => {
+    const uuid = window.localStorage.getItem('uuid');
+    if (uuid) {
+      facePoke.transformImage(uuid, { x, y });
+    }
+  };
+
   return {
     facePoke,
     isDebugMode,
@@ -36,5 +43,6 @@ export function useFacePokeAPI() {
     interruptMessage,
     isLoading,
     setIsLoading,
+    handleCoordinateChange,
   }
 }
