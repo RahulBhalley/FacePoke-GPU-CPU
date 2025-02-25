@@ -54,16 +54,35 @@ class Engine:
         Args:
             live_portrait (LivePortraitPipeline): The LivePortrait model for video generation.
         """
-        self.live_portrait = live_portrait
+        try:
+            logger.info("  🔄 Setting up live portrait...")
+            self.live_portrait = live_portrait
+            logger.info("  ✅ Live portrait setup complete")
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            logger.info("  🔄 Configuring device settings...")
+            self.device = torch.device(live_portrait.live_portrait_wrapper.cfg.device_id)
+            if self.device.type == "cpu":
+                torch.set_num_threads(4)  # Limit number of threads for CPU
+            logger.info(f"  ✅ Device configuration complete (using {self.device})")
+            
+            logger.info("  🔄 Initializing cache...")
+            self.processed_cache = {}
+            self.max_cache_size = 10  # Limit cache size
+            logger.info("  ✅ Cache initialization complete")
 
-        self.processed_cache = {}  # Stores the processed image data
+            # Add memory cleanup
+            import gc
+            gc.collect()
+            torch.cuda.empty_cache()
+            logger.info("  ✅ Memory cleanup complete")
 
-        logger.info("✅ FacePoke Engine initialized successfully.")
+            logger.info("✅ FacePoke Engine initialized successfully")
+        except Exception as e:
+            logger.error(f"❌ Error during engine initialization: {str(e)}")
+            raise
 
-    @alru_cache(maxsize=512)
-    async def load_image(self, data):
+    async def _process_image(self, data):
+        """Internal function to process an image and return the result"""
         image = Image.open(io.BytesIO(data))
 
         # keep the exif orientation (fix the selfie issue on iphone)
@@ -100,26 +119,120 @@ class Engine:
         bbox_info = parse_bbox_from_landmark(processed_data['crop_info']['lmk_crop'], scale=1.0)
 
         return {
-            'u': uid,
-
-            # those aren't easy to serialize
-            'c': bbox_info['center'], # 2x1
-            's': bbox_info['size'], # scalar
-            'b': bbox_info['bbox'],  # 4x2
-            'a': bbox_info['angle'],  # rad, counterclockwise
-            # 'bbox_rot': bbox_info['bbox_rot'].toList(),  # 4x2
+            'u': uid,  # For web UI
+            'uuid': uid,  # For API
+            # Bounding box info needed by web UI
+            'c': bbox_info['center'],  # 2x1
+            's': bbox_info['size'],    # scalar
+            'b': bbox_info['bbox'],    # 4x2
+            'a': bbox_info['angle']     # rad, counterclockwise
         }
 
+    @alru_cache(maxsize=512)
+    async def load_image(self, data_str: str):
+        """Cached version for web UI that takes a string input"""
+        if isinstance(data_str, str) and ',' in data_str:
+            data = base64.b64decode(data_str.split(',')[1])
+        else:
+            data = data_str.encode() if isinstance(data_str, str) else data_str
+        return await self._process_image(data)
+
+    async def load_image_api(self, data: bytes):
+        """Non-cached version for API that takes bytes input"""
+        return await self._process_image(data)
+        
+    async def _load_image_impl(self, data):
+        logger.info("Starting image processing...")
+        try:
+            # Open and process the image
+            image = Image.open(io.BytesIO(data))
+            logger.info(f"Image opened successfully, format: {image.format}, size: {image.size}")
+
+            # keep the exif orientation (fix the selfie issue on iphone)
+            image = ImageOps.exif_transpose(image)
+
+            # Convert the image to RGB mode (removes alpha channel if present)
+            image = image.convert('RGB')
+
+            uid = str(uuid.uuid4())
+            img_rgb = np.array(image)
+
+            inference_cfg = self.live_portrait.live_portrait_wrapper.cfg
+            img_rgb = await asyncio.to_thread(resize_to_limit, img_rgb, inference_cfg.ref_max_shape, inference_cfg.ref_shape_n)
+            crop_info = await asyncio.to_thread(self.live_portrait.cropper.crop_single_image, img_rgb)
+            img_crop_256x256 = crop_info['img_crop_256x256']
+            
+            # Prepare source image and get keypoint info
+            logger.info("Preparing source image...")
+            I_s = await asyncio.to_thread(self.live_portrait.live_portrait_wrapper.prepare_source, img_crop_256x256)
+            logger.info("Getting keypoint info...")
+            x_s_info = await asyncio.to_thread(self.live_portrait.live_portrait_wrapper.get_kp_info, I_s)
+            
+            # Transform keypoints and extract features
+            logger.info("Transforming keypoints...")
+            x_s = await asyncio.to_thread(self.live_portrait.live_portrait_wrapper.transform_keypoint, x_s_info)
+            
+            logger.info("Extracting features...")
+            f_s = await asyncio.to_thread(self.live_portrait.live_portrait_wrapper.extract_feature_3d, I_s)
+            
+            # Store processed data in cache
+            processed_data = {
+                'img_rgb': img_rgb,
+                'crop_info': crop_info,
+                'x_s_info': x_s_info,
+                'f_s': f_s,
+                'x_s': x_s,
+                'inference_cfg': inference_cfg
+            }
+
+            self.processed_cache[uid] = processed_data
+
+            # Calculate the bounding box
+            bbox_info = parse_bbox_from_landmark(processed_data['crop_info']['lmk_crop'], scale=1.0)
+
+            return {
+                'u': uid,
+
+                # those aren't easy to serialize
+                'c': bbox_info['center'], # 2x1
+                's': bbox_info['size'], # scalar
+                'b': bbox_info['bbox'],  # 4x2
+                'a': bbox_info['angle'],  # rad, counterclockwise
+                # 'bbox_rot': bbox_info['bbox_rot'].toList(),  # 4x2
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing image: {str(e)}")
+            raise
+
+
+
+
+
+
+
+
+
+
     async def transform_image(self, uid: str, params: Dict[str, float]) -> bytes:
+        logger.info(f"Transforming image {uid} with params: {params}")
+        
         # If we don't have the image in cache yet, add it
         if uid not in self.processed_cache:
+            logger.error(f"Image {uid} not found in cache. Available IDs: {list(self.processed_cache.keys())}")
             raise ValueError("cache miss")
+            
+        logger.info("Found image in cache, applying transformations...")
 
         processed_data = self.processed_cache[uid]
 
         try:
+            logger.info("Starting image transformation...")
+            logger.info(f"Cache data keys: {processed_data.keys()}")
+            
             # Apply modifications based on params
             x_d_new = processed_data['x_s_info']['kp'].clone()
+            logger.info("Cloned keypoints successfully")
 
             # Adapted from https://github.com/PowerHouseMan/ComfyUI-AdvancedLivePortrait/blob/main/nodes.py#L408-L472
             modifications = [
@@ -188,11 +301,13 @@ class Engine:
             )
             x_d_new = processed_data['x_s_info']['scale'] * (x_d_new @ R_new) + processed_data['x_s_info']['t']
 
-            # Apply stitching
+            logger.info("Applying stitching...")
             x_d_new = await asyncio.to_thread(self.live_portrait.live_portrait_wrapper.stitching, processed_data['x_s'], x_d_new)
+            logger.info("Stitching complete")
 
-            # Generate the output
+            logger.info("Generating output...")
             out = await asyncio.to_thread(self.live_portrait.live_portrait_wrapper.warp_decode, processed_data['f_s'], processed_data['x_s'], x_d_new)
+            logger.info("Parsing output...")
             I_p = await asyncio.to_thread(self.live_portrait.live_portrait_wrapper.parse_output, out['out'])
 
             buffered = io.BytesIO()
