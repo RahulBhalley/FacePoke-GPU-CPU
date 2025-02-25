@@ -29,39 +29,28 @@ const EMOTION_PRESETS: EmotionPreset[] = [
       {
         // A slight downward tilt can emphasize the aggressive stance.
         group: "background",
-        vector: { x: 0, y: 0, z: 0 },
-        rotate_pitch: 10,
-        rotate_yaw: 0,
-        rotate_roll: 0,
+        vector: { x: 0.12, y: -0.04, z: 0 },  // y positive for downward pitch
       },
       {
         // Furrowed, lowered eyebrows.
         group: "leftEyebrow",
-        vector: { x: 0, y: 0, z: 0 },
-        eyebrow: -8,
-      },
-      {
-        group: "rightEyebrow",
-        vector: { x: 0, y: 0, z: 0 },
-        eyebrow: -8,
+        vector: { x: 0.05, y: 0.15, z: 0 },
+        eyebrow: -1.29,
       },
       {
         // Narrowed eyes.
         group: "leftEye",
-        vector: { x: 0, y: 0, z: 0 },
-        eyes: -10,
-      },
-      {
-        group: "rightEye",
-        vector: { x: 0, y: 0, z: 0 },
-        eyes: -10,
+        vector: { x: 0.18, y: -0.25, z: 0 },
+        eyes: -1.08,
+        pupil_x: 5.5,
+        pupil_y: 0,
       },
       {
         // A tense, downturned mouth.
         group: "lips",
-        vector: { x: 0, y: 0, z: 0 },
-        aaa: -20,
-        eee: -10,
+        vector: { x: -0.38, y: 0.36, z: 0 },
+        aaa: -10.08,
+        eee: -16.02,
       },
     ],
     description: "Furrowed eyebrows, narrowed eyes, and a tense, downturned mouth",
@@ -72,39 +61,29 @@ const EMOTION_PRESETS: EmotionPreset[] = [
       {
         // A slight head drop to emphasize a sorrowful look.
         group: "background",
-        vector: { x: 0, y: 0, z: 0 },
-        rotate_pitch: 15,
-        rotate_yaw: 0,
-        rotate_roll: 0,
+        vector: {
+          x: -0.11, y: 0.12, z: 0,
+        },  // y positive for downward pitch
       },
       {
         // Softly raised eyebrows to give a plaintive look.
         group: "leftEyebrow",
-        vector: { x: 0, y: 0, z: 0 },
-        eyebrow: 5,
-      },
-      {
-        group: "rightEyebrow",
-        vector: { x: 0, y: 0, z: 0 },
-        eyebrow: 5,
+        vector: { x: 0.01, y: 0.16, z: 0 },
+        eyebrow: -1.68,
       },
       {
         // Slightly drooping eyes.
         group: "leftEye",
-        vector: { x: 0, y: 0, z: 0 },
-        eyes: -5,
-      },
-      {
-        group: "rightEye",
-        vector: { x: 0, y: 0, z: 0 },
-        eyes: -5,
+        vector: { x: -0.2334098950897014,y: 0.11482211814970011, z: 0},
+        eyes: -10,
+        pupil_x: -7,
       },
       {
         // A downturned mouth.
         group: "lips",
-        vector: { x: 0, y: 0, z: 0 },
-        aaa: -10,
-        eee: -5,
+        vector: { x: 0, y: 0.47, z: 0 },
+        aaa: -26,
+        eee: -2,
       },
     ],
     description: "Drooping features with a downturned mouth",
@@ -113,102 +92,41 @@ const EMOTION_PRESETS: EmotionPreset[] = [
     name: "😮 Surprised",
     landmarks: [
       {
-        // A slight upward tilt, as if the head recoils.
+        // A slight head tilt backward and to the side.
         group: "background",
-        vector: { x: 0, y: 0, z: 0 },
-        rotate_pitch: -10,
-        rotate_yaw: 0,
-        rotate_roll: 0,
+        vector: { x: -0.03, y: 0.06, z: 0 },  // x negative for positive yaw, y negative for upward pitch
       },
       {
-        // Raised, wide-open eyebrows.
+        // Moderately raised eyebrows.
         group: "leftEyebrow",
-        vector: { x: 0, y: 0, z: 0 },
-        eyebrow: 12,
+        vector: { x: 0.05, y: -0.48, z: 0 },
+        eyebrow: 14.70,
       },
       {
-        group: "rightEyebrow",
-        vector: { x: 0, y: 0, z: 0 },
-        eyebrow: 12,
-      },
-      {
-        // Wide eyes.
+        // Eyes wide open with slightly shifted pupils.
         group: "leftEye",
-        vector: { x: 0, y: 0, z: 0 },
-        eyes: 15,
+        vector: { x: 0.01, y: -0.43, z: 0 },
+        eyes: 3.5,
+        pupil_x: 0.56,
+        pupil_y: 0,
       },
       {
-        group: "rightEye",
-        vector: { x: 0, y: 0, z: 0 },
-        eyes: 15,
-      },
-      {
-        // An open mouth.
+        // A mouth that’s partly open but tense.
         group: "lips",
-        vector: { x: 0, y: 0, z: 0 },
-        aaa: 80,
-        eee: 0,
+        vector: { x: 0.02, y: -0.41, z: 0 },
+        aaa: 107,
+        eee: -1.76,
       },
     ],
     description: "Raised eyebrows, wide open eyes, and an open mouth",
   },
   {
-    name: "😨 Scared",
-    landmarks: [
-      {
-        // A slight head tilt backward and to the side.
-        group: "background",
-        vector: { x: 0, y: 0, z: 0 },
-        rotate_pitch: -15,
-        rotate_yaw: 5,
-        rotate_roll: 0,
-      },
-      {
-        // Moderately raised eyebrows.
-        group: "leftEyebrow",
-        vector: { x: 0, y: 0, z: 0 },
-        eyebrow: 10,
-      },
-      {
-        group: "rightEyebrow",
-        vector: { x: 0, y: 0, z: 0 },
-        eyebrow: 10,
-      },
-      {
-        // Eyes wide open with slightly shifted pupils.
-        group: "leftEye",
-        vector: { x: 0, y: 0, z: 0 },
-        eyes: 12,
-        pupil_x: 5,
-        pupil_y: 5,
-      },
-      {
-        group: "rightEye",
-        vector: { x: 0, y: 0, z: 0 },
-        eyes: 12,
-        pupil_x: 5,
-        pupil_y: 5,
-      },
-      {
-        // A mouth that’s partly open but tense.
-        group: "lips",
-        vector: { x: 0, y: 0, z: 0 },
-        aaa: 30,
-        eee: -5,
-      },
-    ],
-    description: "Wide eyes, raised eyebrows, and a tense mouth conveying fear",
-  },
-  {
     name: "🤔 Thinking",
     landmarks: [
       {
-        // A relaxed head posture.
+        // A relaxed head posture with a thoughtful tilt.
         group: "background",
-        vector: { x: 0.038, y: -0.038, z: 0 },
-        rotate_pitch: -18.60,
-        rotate_yaw: -25.15,
-        rotate_roll: 0,
+        vector: { x: 0.5, y: -0.3, z: 0 },  // x positive for negative yaw, y negative for upward pitch
       },
       {
         // A slightly raised eyebrow hinting at concentration.
@@ -230,12 +148,9 @@ const EMOTION_PRESETS: EmotionPreset[] = [
     name: "😊 Happy",
     landmarks: [
       {
-        // A relaxed head posture.
+        // A slight upward tilt for a cheerful look.
         group: "background",
-        vector: { x: 0.038, y: -0.038, z: 0 },
-        rotate_pitch: -3,
-        rotate_yaw: -5,
-        rotate_roll: 0,
+        vector: { x: 0.1, y: -0.1, z: 0 },  // x positive for negative yaw, y negative for upward pitch
       },
       {
         // Softly raised eyebrows that contribute to a joyful expression.
