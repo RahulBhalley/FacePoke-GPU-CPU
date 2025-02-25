@@ -22,6 +22,7 @@ short_description: Import a portrait, click to move the head!
 - [Installation](#installation)
   - [Local Setup](#local-setup)
   - [Docker Deployment](#docker-deployment)
+- [API Reference](#api-reference)
 - [Development](#development)
 - [Contributing](#contributing)
 - [License](#license)
@@ -99,6 +100,35 @@ Contributions are welcome to help supporting other platforms!
    The application will use GPU by default if available, with half-precision enabled for better performance. Use the `--cpu` flag to force CPU usage if needed.
 
 7. Open `http://localhost:8080` in your web browser.
+
+## API Reference
+
+FacePoke provides a REST API endpoint to apply emotion presets to images programmatically.
+
+### Apply Emotion
+
+**Endpoint**: `POST /api/apply-emotion`
+
+**Content-Type**: `multipart/form-data`
+
+**Parameters**:
+- `image`: The image file to process (supported formats: JPEG, PNG, WebP)
+- `emotion`: The emotion preset to apply. Available options:
+  - `angry`
+  - `sad`
+  - `surprised`
+  - `thinking`
+  - `happy`
+
+**Response**: WebP image
+
+**Example**:
+```bash
+curl -X POST http://localhost:8080/api/apply-emotion \
+  -F "image=@portrait.jpg" \
+  -F "emotion=happy" \
+  --output modified_image.webp
+```
 
 ### Docker Deployment
 
