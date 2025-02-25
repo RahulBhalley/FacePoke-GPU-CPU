@@ -418,7 +418,20 @@ export const useMainStore = create<ImageState>((set, get) => ({
       }
     }
 
-    //console.log(`PITCH=${params.rotate_pitch || 0}, YAW=${params.rotate_yaw || 0}, ROLL=${params.rotate_roll || 0}`);
+    // Log all current parameters with their values
+    console.log('Current face parameters:', {
+      group: landmark.group,
+      vector: vector,
+      rotate_pitch: params.rotate_pitch || 0,
+      rotate_yaw: params.rotate_yaw || 0,
+      rotate_roll: params.rotate_roll || 0,
+      eyebrow: params.eyebrow || 0,
+      eyes: params.eyes || 0,
+      eee: params.eee || 0,
+      aaa: params.aaa || 0,
+      pupil_x: params.pupil_x || 0,
+      pupil_y: params.pupil_y || 0
+    });
 
     setParams(params)
 

@@ -9,79 +9,263 @@ interface EmotionPreset {
   landmarks: Array<{
     group: LandmarkGroup;
     vector: { x: number; y: number; z: number };
+    aaa?: number;
+    eee?: number;
+    eyebrow?: number;
+    eyes?: number;
+    pupil_x?: number;
+    pupil_y?: number;
+    rotate_pitch?: number;
+    rotate_roll?: number;
+    rotate_yaw?: number;
   }>;
   description?: string;
 }
 
 const EMOTION_PRESETS: EmotionPreset[] = [
-  { 
-    name: "😠 Angry", 
+  {
+    name: "😠 Angry",
     landmarks: [
-      { group: 'background', vector: { x: 0, y: 0.3, z: 0 } },      // tilt head down
-      { group: 'leftEyebrow', vector: { x: 0, y: 0.3, z: 0 } },     // furrow brows
-      { group: 'rightEyebrow', vector: { x: 0, y: 0.3, z: 0 } },    // furrow brows
-      { group: 'leftEye', vector: { x: 0, y: 0.3, z: 0 } },         // squint eyes
-      { group: 'rightEye', vector: { x: 0, y: 0.3, z: 0 } },        // squint eyes
-      { group: 'lips', vector: { x: 0, y: 0.3, z: 0 } }             // frown
+      {
+        // A slight downward tilt can emphasize the aggressive stance.
+        group: "background",
+        vector: { x: 0, y: 0, z: 0 },
+        rotate_pitch: 10,
+        rotate_yaw: 0,
+        rotate_roll: 0,
+      },
+      {
+        // Furrowed, lowered eyebrows.
+        group: "leftEyebrow",
+        vector: { x: 0, y: 0, z: 0 },
+        eyebrow: -8,
+      },
+      {
+        group: "rightEyebrow",
+        vector: { x: 0, y: 0, z: 0 },
+        eyebrow: -8,
+      },
+      {
+        // Narrowed eyes.
+        group: "leftEye",
+        vector: { x: 0, y: 0, z: 0 },
+        eyes: -10,
+      },
+      {
+        group: "rightEye",
+        vector: { x: 0, y: 0, z: 0 },
+        eyes: -10,
+      },
+      {
+        // A tense, downturned mouth.
+        group: "lips",
+        vector: { x: 0, y: 0, z: 0 },
+        aaa: -20,
+        eee: -10,
+      },
     ],
-    description: "Tilted down, intense gaze" 
+    description: "Furrowed eyebrows, narrowed eyes, and a tense, downturned mouth",
   },
-  { 
-    name: "😢 Sad", 
+  {
+    name: "😢 Sad",
     landmarks: [
-      { group: 'background', vector: { x: 0, y: 0.3, z: 0 } },      // tilt head down
-      { group: 'leftEyebrow', vector: { x: 0, y: -0.3, z: 0 } },    // raise inner brows
-      { group: 'rightEyebrow', vector: { x: 0, y: -0.3, z: 0 } },   // raise inner brows
-      { group: 'lips', vector: { x: 0, y: 0.3, z: 0 } }             // frown
+      {
+        // A slight head drop to emphasize a sorrowful look.
+        group: "background",
+        vector: { x: 0, y: 0, z: 0 },
+        rotate_pitch: 15,
+        rotate_yaw: 0,
+        rotate_roll: 0,
+      },
+      {
+        // Softly raised eyebrows to give a plaintive look.
+        group: "leftEyebrow",
+        vector: { x: 0, y: 0, z: 0 },
+        eyebrow: 5,
+      },
+      {
+        group: "rightEyebrow",
+        vector: { x: 0, y: 0, z: 0 },
+        eyebrow: 5,
+      },
+      {
+        // Slightly drooping eyes.
+        group: "leftEye",
+        vector: { x: 0, y: 0, z: 0 },
+        eyes: -5,
+      },
+      {
+        group: "rightEye",
+        vector: { x: 0, y: 0, z: 0 },
+        eyes: -5,
+      },
+      {
+        // A downturned mouth.
+        group: "lips",
+        vector: { x: 0, y: 0, z: 0 },
+        aaa: -10,
+        eee: -5,
+      },
     ],
-    description: "Looking down, slight tilt" 
+    description: "Drooping features with a downturned mouth",
   },
-  { 
-    name: "😮 Surprised", 
+  {
+    name: "😮 Surprised",
     landmarks: [
-      { group: 'background', vector: { x: 0, y: -0.3, z: 0 } },     // tilt head up
-      { group: 'leftEyebrow', vector: { x: 0, y: -0.4, z: 0 } },    // raise brows
-      { group: 'rightEyebrow', vector: { x: 0, y: -0.4, z: 0 } },   // raise brows
-      { group: 'leftEye', vector: { x: 0, y: -0.3, z: 0 } },        // widen eyes
-      { group: 'rightEye', vector: { x: 0, y: -0.3, z: 0 } },       // widen eyes
-      { group: 'lips', vector: { x: 0, y: -0.4, z: 0 } }            // open mouth
+      {
+        // A slight upward tilt, as if the head recoils.
+        group: "background",
+        vector: { x: 0, y: 0, z: 0 },
+        rotate_pitch: -10,
+        rotate_yaw: 0,
+        rotate_roll: 0,
+      },
+      {
+        // Raised, wide-open eyebrows.
+        group: "leftEyebrow",
+        vector: { x: 0, y: 0, z: 0 },
+        eyebrow: 12,
+      },
+      {
+        group: "rightEyebrow",
+        vector: { x: 0, y: 0, z: 0 },
+        eyebrow: 12,
+      },
+      {
+        // Wide eyes.
+        group: "leftEye",
+        vector: { x: 0, y: 0, z: 0 },
+        eyes: 15,
+      },
+      {
+        group: "rightEye",
+        vector: { x: 0, y: 0, z: 0 },
+        eyes: 15,
+      },
+      {
+        // An open mouth.
+        group: "lips",
+        vector: { x: 0, y: 0, z: 0 },
+        aaa: 80,
+        eee: 0,
+      },
     ],
-    description: "Looking up, wide-eyed" 
+    description: "Raised eyebrows, wide open eyes, and an open mouth",
   },
-  { 
-    name: "😨 Scared", 
+  {
+    name: "😨 Scared",
     landmarks: [
-      { group: 'background', vector: { x: 0.2, y: -0.3, z: 0 } },   // tilt head back and side
-      { group: 'leftEyebrow', vector: { x: 0, y: -0.4, z: 0 } },    // raise brows
-      { group: 'rightEyebrow', vector: { x: 0, y: -0.4, z: 0 } },   // raise brows
-      { group: 'leftEye', vector: { x: 0, y: -0.3, z: 0 } },        // widen eyes
-      { group: 'rightEye', vector: { x: 0, y: -0.3, z: 0 } },       // widen eyes
-      { group: 'lips', vector: { x: 0, y: -0.3, z: 0 } }            // open mouth
+      {
+        // A slight head tilt backward and to the side.
+        group: "background",
+        vector: { x: 0, y: 0, z: 0 },
+        rotate_pitch: -15,
+        rotate_yaw: 5,
+        rotate_roll: 0,
+      },
+      {
+        // Moderately raised eyebrows.
+        group: "leftEyebrow",
+        vector: { x: 0, y: 0, z: 0 },
+        eyebrow: 10,
+      },
+      {
+        group: "rightEyebrow",
+        vector: { x: 0, y: 0, z: 0 },
+        eyebrow: 10,
+      },
+      {
+        // Eyes wide open with slightly shifted pupils.
+        group: "leftEye",
+        vector: { x: 0, y: 0, z: 0 },
+        eyes: 12,
+        pupil_x: 5,
+        pupil_y: 5,
+      },
+      {
+        group: "rightEye",
+        vector: { x: 0, y: 0, z: 0 },
+        eyes: 12,
+        pupil_x: 5,
+        pupil_y: 5,
+      },
+      {
+        // A mouth that’s partly open but tense.
+        group: "lips",
+        vector: { x: 0, y: 0, z: 0 },
+        aaa: 30,
+        eee: -5,
+      },
     ],
-    description: "Tilted back, fearful expression" 
+    description: "Wide eyes, raised eyebrows, and a tense mouth conveying fear",
   },
-  { 
-    name: "🤔 Thinking", 
+  {
+    name: "🤔 Thinking",
     landmarks: [
-      { group: 'faceOval', vector: { x: 0.3, y: 0, z: 0 } },       // tilt head sideways
-      { group: 'leftEyebrow', vector: { x: 0, y: -0.2, z: 0 } },    // raise one brow
-      { group: 'lips', vector: { x: 0.2, y: 0, z: 0 } }            // purse lips
+      {
+        // A relaxed head posture.
+        group: "background",
+        vector: { x: 0.038, y: -0.038, z: 0 },
+        rotate_pitch: -18.60,
+        rotate_yaw: -25.15,
+        rotate_roll: 0,
+      },
+      {
+        // A slightly raised eyebrow hinting at concentration.
+        group: "leftEyebrow",
+        vector: { x: 0.12, y: -0.42, z: 0 },
+        eyebrow: 13.03,
+      },
+      {
+        // A slight, ambiguous smirk.
+        group: "lips",
+        vector: { x: -0.09, y: 0.31, z: 0 },
+        aaa: -1.52,
+        eee: -5.89,
+      },
     ],
-    description: "Tilted, contemplative look" 
+    description: "A contemplative look with a subtle head tilt and smirk",
   },
-  { 
-    name: "😊 Happy", 
+  {
+    name: "😊 Happy",
     landmarks: [
-      { group: 'background', vector: { x: 0, y: -0.1, z: 0 } },     // slight head up
-      { group: 'leftEyebrow', vector: { x: 0, y: -0.2, z: 0 } },    // raise brows
-      { group: 'rightEyebrow', vector: { x: 0, y: -0.2, z: 0 } },   // raise brows
-      { group: 'leftEye', vector: { x: 0, y: 0.2, z: 0 } },         // squint eyes
-      { group: 'rightEye', vector: { x: 0, y: 0.2, z: 0 } },        // squint eyes
-      { group: 'lips', vector: { x: 0.3, y: -0.2, z: 0 } }          // wide smile
+      {
+        // A relaxed head posture.
+        group: "background",
+        vector: { x: 0.038, y: -0.038, z: 0 },
+        rotate_pitch: -3,
+        rotate_yaw: -5,
+        rotate_roll: 0,
+      },
+      {
+        // Softly raised eyebrows that contribute to a joyful expression.
+        group: "leftEyebrow",
+        vector: { x: 0.54, y:-0.45, z: 0 },
+        eyebrow: 13,
+      },
+      {
+        group: "rightEyebrow",
+        vector: { x: 0.54, y:-0.45, z: 0 },
+        eyebrow: 13,
+      },
+      {
+        // Eyes that are gently open.
+        group: "leftEye",
+        vector: { x: 0.045, y: -0.39, z: 0 },
+        eyes: 2.5,
+      },
+      {
+        // A broad, uplifting smile.
+        group: "lips",
+        vector: { x: 0.41, y: 0.21, z: 0 },
+        aaa: 13,
+        eee: 12,
+      },
     ],
-    description: "Cheerful expression" 
+    description: "A broad smile with relaxed, cheerful features",
   },
 ];
+
 
 export function EmotionPresets() {
   const { modifyImage } = useMainStore();
@@ -98,12 +282,14 @@ export function EmotionPresets() {
             key={emotion.name}
             onClick={() => {
               // Apply each landmark modification in sequence
-              emotion.landmarks.forEach(({ group, vector }) => {
+              emotion.landmarks.forEach((landmark) => {
+                const { group, vector, ...params } = landmark;
                 modifyImage({
                   landmark: {
                     group,
                     distance: Math.sqrt(vector.x * vector.x + vector.y * vector.y),
-                    vector
+                    vector,
+                    ...params
                   },
                   vector,
                   mode: 'PRIMARY' as ActionMode
