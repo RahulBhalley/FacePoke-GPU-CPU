@@ -7,13 +7,13 @@ sdk: docker
 pinned: true
 license: mit
 header: mini
-app_file: app.py
-app_port: 8080
+app_file: gradio_app.py
+app_port: 7860
 disable_embedding: true
-short_description: Import a portrait, click to move the head!
+short_description: Simple portrait animation with emotions!
 ---
 
-# FacePoke
+# FacePoke - Simple Portrait Animation
 
 ## Table of Contents
 
@@ -22,22 +22,18 @@ short_description: Import a portrait, click to move the head!
 - [Installation](#installation)
   - [Local Setup](#local-setup)
   - [Docker Deployment](#docker-deployment)
-- [API Reference](#api-reference)
+- [Usage](#usage)
 - [Development](#development)
 - [Contributing](#contributing)
 - [License](#license)
 
 ## Introduction
 
-A real-time head transformation app.
+A **simple and clean** portrait animation app that lets you apply different emotions to your photos.
 
-For best performance please run the app from your own machine (local or in the cloud).
+**Simple as fuck!** 🎭
 
 **Repository**: [GitHub - jbilcke-hf/FacePoke](https://github.com/jbilcke-hf/FacePoke)
-
-You can try the demo but it is a shared space, latency may be high if there are multiple users or if you live far from the datacenter hosting the Hugging Face Space.
-
-**Live Demo**: [FacePoke on Hugging Face Spaces](https://huggingface.co/spaces/jbilcke-hf/FacePoke)
 
 ## Acknowledgements
 
@@ -49,9 +45,7 @@ It uses the face transformation routines from https://github.com/PowerHouseMan/C
 
 ### Before you install
 
-FacePoke has only been tested in a Linux environment, using `Python 3.10` and `CUDA 12.4` (so a NVIDIA GPU). However, the application now supports both GPU and CPU environments, with GPU being used by default when available.
-
-Contributions are welcome to help supporting other platforms!
+FacePoke has been tested in a Linux environment, using `Python 3.10` and `CUDA 12.4` (NVIDIA GPU). The application supports both GPU and CPU environments, with GPU being used by default when available.
 
 ### Local Setup
 
@@ -67,123 +61,112 @@ Contributions are welcome to help supporting other platforms!
    cd FacePoke
    ```
 
-3. Install Python dependencies:
-
-   Using a virtual environment (Python venv) is strongly recommended.
-
-   FacePoke has been tested with `Python 3.10`.
+3. Set up the virtual environment (recommended):
 
    ```bash
-   pip3 install --upgrade -r requirements.txt
+   # Create and setup virtual environment
+   ./setup_env.sh
+   
+   # Activate the environment
+   source activate_env.sh
    ```
 
-4. Install frontend dependencies:
+   Or manually:
    ```bash
-   cd client
-   bun install
+   python3 -m venv facepoke_env
+   source facepoke_env/bin/activate
+   pip install -r requirements_gradio.txt
    ```
 
-5. Build the frontend:
-   ```bash
-   bun build ./src/index.tsx --outdir ../public/
-   ```
-
-6. Start the backend server:
+4. Start the simple Gradio interface:
    ```bash
    # Run with GPU (default)
-   python app.py
+   python run_gradio.py
 
    # Force CPU usage
-   python app.py --cpu
+   python run_gradio.py --cpu
+
+   # Run on different port
+   python run_gradio.py --port 8080
+
+   # Create public link
+   python run_gradio.py --share
    ```
 
-   The application will use GPU by default if available, with half-precision enabled for better performance. Use the `--cpu` flag to force CPU usage if needed.
+   The application will use GPU by default if available. Use the `--cpu` flag to force CPU usage if needed.
 
-7. Open `http://localhost:8080` in your web browser.
+## Usage
 
-## API Reference
+1. **Upload a portrait photo** - Use a clear, front-facing photo for best results
+2. **Choose an emotion** - Select from Happy, Sad, Angry, Surprised, or Thinking
+3. **Click "Apply Emotion"** - Watch your portrait come to life!
+4. **Download the result** - Save your animated portrait
 
-FacePoke provides a REST API endpoint to apply emotion presets to images programmatically.
+### Tips for Best Results
 
-### Apply Emotion
+- Use clear, well-lit portrait photos
+- Make sure the face is clearly visible
+- Front-facing photos work best
+- High-quality images produce better results
 
-**Endpoint**: `POST /api/apply-emotion`
+## Docker Deployment
 
-**Content-Type**: `multipart/form-data`
-
-**Parameters**:
-- `image`: The image file to process (supported formats: JPEG, PNG, WebP)
-- `emotion`: The emotion preset to apply. Available options:
-  - `angry`
-  - `sad`
-  - `surprised`
-  - `thinking`
-  - `happy`
-
-**Response**: WebP image
-
-**Example**:
-```bash
-curl -X POST http://localhost:8080/api/apply-emotion \
-  -F "image=@portrait.jpg" \
-  -F "emotion=happy" \
-  --output modified_image.webp
-```
-
-### Docker Deployment
-
-1. Build the Docker image:
-   ```bash
-   docker build -t facepoke .
-   ```
-
-2. Run the container:
-   ```bash
-   docker run -p 8080:8080 facepoke
-   ```
-
-3. To deploy to Hugging Face Spaces:
-   - Fork the repository on GitHub.
-   - Create a new Space on Hugging Face.
-   - Connect your GitHub repository to the Space.
-   - Configure the Space to use the Docker runtime.
-
-
-Note: by default Hugging Face runs the `main` branch, so if you want to push a feature branch you need to do this:
+The Dockerfile is configured to run the Gradio interface on port 7860.
 
 ```bash
-git push <space_repo> <feature_branch>:main -f
+# Build the Docker image
+docker build -t facepoke .
+
+# Run with GPU support
+docker run --gpus all -p 7860:7860 facepoke
+
+# Run with CPU only
+docker run -p 7860:7860 facepoke
 ```
 
 ## Development
 
-The project structure is organized as follows:
+### Project Structure
 
-- `app.py`: Main backend server handling WebSocket connections.
-- `engine.py`: Core logic.
-- `loader.py`: Initializes and loads AI models.
-- `client/`: Frontend React application.
-  - `src/`: TypeScript source files.
-  - `public/`: Static assets and built files.
+- `gradio_app.py` - Simple Gradio interface
+- `run_gradio.py` - Startup script with CLI options
+- `app.py` - Original aiohttp server (legacy)
+- `engine.py` - Core animation engine
+- `loader.py` - Model loading utilities
+- `liveportrait/` - LivePortrait pipeline implementation
 
-### Increasing the framerate
+### Environment Management
 
-I am testing various things to increase the framerate.
+The project uses a virtual environment to keep dependencies isolated:
 
-One project is to only transmit the modified head, instead of the whole image.
+```bash
+# Create and setup environment
+./setup_env.sh
 
-Another one is to automatically adapt to the server and network speed.
+# Activate environment
+source activate_env.sh
+
+# Deactivate environment
+deactivate
+
+# Test installation
+python test_gradio.py
+```
+
+### Running in Development
+
+```bash
+# Start with debug logging
+python run_gradio.py --port 7860
+
+# Force CPU for testing
+python run_gradio.py --cpu --port 7860
+```
 
 ## Contributing
 
-Contributions to FacePoke are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report issues, or request features.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-FacePoke is released under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-Please note that while the code of LivePortrait and Insightface are open-source with "no limitation for both academic and commercial usage", the model weights trained from Insightface data are available for [non-commercial research purposes only](https://github.com/deepinsight/insightface?tab=readme-ov-file#license).
-
----
-
-Developed with ❤️ by Julian Bilcke at Hugging Face
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

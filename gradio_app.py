@@ -1,0 +1,237 @@
+"""
+Simple Gradio Interface for FacePoke
+
+A clean, simple interface for the FacePoke portrait animation system.
+"""
+
+import gradio as gr
+import asyncio
+import logging
+from PIL import Image
+import io
+import os
+import sys
+
+# Add the current directory to Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from loader import initialize_models
+from engine import Engine
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Global variables
+live_portrait = None
+engine = None
+
+# Emotion presets
+EMOTION_PARAMS = {
+    'Happy': {
+        'rotate_pitch': -3,
+        'rotate_yaw': -5,
+        'rotate_roll': 0,
+        'eyebrow': 13,
+        'eyes': 2.5,
+        'eee': 12,
+        'aaa': 13,
+        'pupil_x': 0,
+        'pupil_y': 0
+    },
+    'Sad': {
+        'rotate_pitch': 15,
+        'rotate_yaw': 0,
+        'rotate_roll': 0,
+        'eyebrow': 5,
+        'eyes': -5,
+        'eee': -5,
+        'aaa': -10,
+        'pupil_x': 0,
+        'pupil_y': 0
+    },
+    'Angry': {
+        'rotate_pitch': 10,
+        'rotate_yaw': 0,
+        'rotate_roll': 0,
+        'eyebrow': -8,
+        'eyes': -10,
+        'eee': -10,
+        'aaa': -20,
+        'pupil_x': 5.5,
+        'pupil_y': 0
+    },
+    'Surprised': {
+        'rotate_pitch': -10,
+        'rotate_yaw': 0,
+        'rotate_roll': 0,
+        'eyebrow': 12,
+        'eyes': 15,
+        'eee': 0,
+        'aaa': 80,
+        'pupil_x': 0,
+        'pupil_y': 5
+    },
+    'Thinking': {
+        'rotate_pitch': -18.60,
+        'rotate_yaw': -25.15,
+        'rotate_roll': 0,
+        'eyebrow': 13.03,
+        'eyes': -5,
+        'eee': -5.89,
+        'aaa': -1.52,
+        'pupil_x': 8,
+        'pupil_y': 0
+    }
+}
+
+async def initialize_models_async():
+    """Initialize models asynchronously"""
+    global live_portrait, engine
+    try:
+        logger.info("Initializing models...")
+        live_portrait = await initialize_models()
+        engine = Engine(live_portrait=live_portrait)
+        logger.info("✅ Models initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize models: {str(e)}")
+        raise
+
+def apply_emotion(image, emotion_name):
+    """Apply emotion to the uploaded image"""
+    global engine
+    
+    if engine is None:
+        return None, "❌ Models not initialized. Please wait for initialization to complete."
+    
+    if image is None:
+        return None, "❌ Please upload an image first."
+    
+    if emotion_name not in EMOTION_PARAMS:
+        return None, f"❌ Invalid emotion: {emotion_name}"
+    
+    try:
+        # Convert PIL image to bytes
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        img_byte_arr = img_byte_arr.getvalue()
+        
+        # Load image into engine
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            res = loop.run_until_complete(engine.load_image_api(img_byte_arr))
+            
+            # Apply emotion transformation
+            webp_bytes = loop.run_until_complete(
+                engine.transform_image(res['uuid'], EMOTION_PARAMS[emotion_name])
+            )
+            
+            # Convert webp bytes back to PIL image
+            result_image = Image.open(io.BytesIO(webp_bytes))
+            
+            return result_image, f"✅ Applied {emotion_name} emotion successfully!"
+            
+        finally:
+            loop.close()
+            
+    except Exception as e:
+        logger.error(f"Error applying emotion: {str(e)}")
+        return None, f"❌ Error: {str(e)}"
+
+def create_interface():
+    """Create the Gradio interface"""
+    
+    with gr.Blocks(
+        title="FacePoke - Simple Portrait Animation",
+        theme=gr.themes.Soft(),
+        css="""
+        .gradio-container {
+            max-width: 800px !important;
+            margin: 0 auto !important;
+        }
+        """
+    ) as interface:
+        
+        gr.Markdown("""
+        # 🎭 FacePoke - Simple Portrait Animation
+        
+        Upload a portrait photo and apply different emotions to animate it!
+        """)
+        
+        with gr.Row():
+            with gr.Column(scale=1):
+                # Input section
+                gr.Markdown("### 📸 Upload Image")
+                input_image = gr.Image(
+                    label="Upload Portrait",
+                    type="pil",
+                    height=300
+                )
+                
+                emotion_dropdown = gr.Dropdown(
+                    choices=list(EMOTION_PARAMS.keys()),
+                    value="Happy",
+                    label="Choose Emotion",
+                    info="Select the emotion to apply to your portrait"
+                )
+                
+                apply_btn = gr.Button(
+                    "🎭 Apply Emotion",
+                    variant="primary",
+                    size="lg"
+                )
+                
+                status_text = gr.Textbox(
+                    label="Status",
+                    interactive=False,
+                    value="Ready to process images!"
+                )
+            
+            with gr.Column(scale=1):
+                # Output section
+                gr.Markdown("### 🎨 Result")
+                output_image = gr.Image(
+                    label="Animated Portrait",
+                    height=300
+                )
+        
+        # Examples
+        gr.Markdown("### 💡 Tips")
+        gr.Markdown("""
+        - Use clear, front-facing portrait photos for best results
+        - Make sure the face is well-lit and clearly visible
+        - The system works best with high-quality images
+        - Supported formats: JPG, PNG, WEBP
+        """)
+        
+        # Event handlers
+        apply_btn.click(
+            fn=apply_emotion,
+            inputs=[input_image, emotion_dropdown],
+            outputs=[output_image, status_text]
+        )
+        
+        # Initialize models on startup
+        interface.load(initialize_models_async)
+    
+    return interface
+
+if __name__ == "__main__":
+    # Initialize models
+    logger.info("Starting FacePoke Gradio app...")
+    
+    # Check for CPU flag
+    force_cpu = os.environ.get('FACEPOKE_FORCE_CPU', '0') == '1'
+    if force_cpu:
+        logger.info("🔧 Forcing CPU usage as requested")
+    
+    # Create and launch interface
+    interface = create_interface()
+    interface.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False,
+        show_error=True,
+        quiet=False
+    )

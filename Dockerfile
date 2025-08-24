@@ -53,8 +53,8 @@ WORKDIR $HOME/app
 
 COPY --chown=user . $HOME/app
 
-EXPOSE 8080
+EXPOSE 7860
 
-ENV PORT 8080
+ENV PORT 7860
 
-CMD python3 app.py
+CMD python3 gradio_app.py

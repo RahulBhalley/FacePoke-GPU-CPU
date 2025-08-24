@@ -1,0 +1,37 @@
+# Core dependencies for FacePoke Gradio interface
+gradio>=5.6.0
+torch
+torchvision
+torchaudio
+pillow>=10.4.0
+numpy>=1.22.0
+opencv-python>=4.8.0
+scipy>=1.10.0
+imageio>=2.31.0
+imageio-ffmpeg>=0.5.0
+tqdm>=4.66.0
+rich>=13.7.0
+pyyaml>=6.0.0
+aiohttp>=3.10.0
+async-lru>=2.0.0
+tyro>=0.8.0
+omegaconf>=2.3.0
+pydantic>=2.9.0
+
+# ONNX dependencies
+onnxruntime
+onnx>=1.16.0
+
+# Additional ML dependencies
+diffusers>=0.30.0
+accelerate>=0.34.0
+transformers>=4.39.0
+huggingface-hub>=0.25.0
+safetensors>=0.4.0
+einops>=0.7.0
+
+# Optional: for AVIF support
+pillow-avif-plugin>=1.4.0
+
+# Development dependencies
+pytest>=7.0.0
