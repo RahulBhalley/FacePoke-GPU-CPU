@@ -36,10 +36,15 @@ EMOTION_PARAMS = {
         'rotate_pitch': -3,
         'rotate_yaw': -5,
         'rotate_roll': 0,
+        'blink': 0,
         'eyebrow': 13,
+        'wink': 0,
         'eyes': 2.5,
         'eee': 12,
         'aaa': 13,
+        'woo': 0,
+        'smile': 0.8,
+        'mouth': 0,
         'pupil_x': 0,
         'pupil_y': 0
     },
@@ -47,10 +52,15 @@ EMOTION_PARAMS = {
         'rotate_pitch': 15,
         'rotate_yaw': 0,
         'rotate_roll': 0,
+        'blink': 0,
         'eyebrow': 5,
+        'wink': 0,
         'eyes': -5,
         'eee': -5,
         'aaa': -10,
+        'woo': 0,
+        'smile': -0.2,
+        'mouth': 0,
         'pupil_x': 0,
         'pupil_y': 0
     },
@@ -58,10 +68,15 @@ EMOTION_PARAMS = {
         'rotate_pitch': 10,
         'rotate_yaw': 0,
         'rotate_roll': 0,
+        'blink': 0,
         'eyebrow': -8,
+        'wink': 0,
         'eyes': -10,
         'eee': -10,
         'aaa': -20,
+        'woo': 0,
+        'smile': -0.3,
+        'mouth': 0,
         'pupil_x': 5.5,
         'pupil_y': 0
     },
@@ -69,10 +84,15 @@ EMOTION_PARAMS = {
         'rotate_pitch': -10,
         'rotate_yaw': 0,
         'rotate_roll': 0,
+        'blink': 0,
         'eyebrow': 12,
+        'wink': 0,
         'eyes': 15,
         'eee': 0,
         'aaa': 80,
+        'woo': 0,
+        'smile': 0.3,
+        'mouth': 0,
         'pupil_x': 0,
         'pupil_y': 5
     },
@@ -80,11 +100,64 @@ EMOTION_PARAMS = {
         'rotate_pitch': -18.60,
         'rotate_yaw': -25.15,
         'rotate_roll': 0,
+        'blink': 0,
         'eyebrow': 13.03,
+        'wink': 0,
         'eyes': -5,
         'eee': -5.89,
         'aaa': -1.52,
+        'woo': 0,
+        'smile': 0.1,
+        'mouth': 0,
         'pupil_x': 8,
+        'pupil_y': 0
+    },
+    'Winking': {
+        'rotate_pitch': 0,
+        'rotate_yaw': 0,
+        'rotate_roll': 0,
+        'blink': 0,
+        'eyebrow': 0,
+        'wink': 15,
+        'eyes': 0,
+        'eee': 0,
+        'aaa': 0,
+        'woo': 0,
+        'smile': 0.5,
+        'mouth': 0,
+        'pupil_x': 0,
+        'pupil_y': 0
+    },
+    'Blinking': {
+        'rotate_pitch': 0,
+        'rotate_yaw': 0,
+        'rotate_roll': 0,
+        'blink': -10,
+        'eyebrow': 0,
+        'wink': 0,
+        'eyes': 0,
+        'eee': 0,
+        'aaa': 0,
+        'woo': 0,
+        'smile': 0,
+        'mouth': 0,
+        'pupil_x': 0,
+        'pupil_y': 0
+    },
+    'Woo': {
+        'rotate_pitch': 0,
+        'rotate_yaw': 0,
+        'rotate_roll': 0,
+        'blink': 0,
+        'eyebrow': 0,
+        'wink': 0,
+        'eyes': 0,
+        'eee': 0,
+        'aaa': 0,
+        'woo': 10,
+        'smile': 0.2,
+        'mouth': 0,
+        'pupil_x': 0,
         'pupil_y': 0
     }
 }
@@ -148,7 +221,7 @@ def apply_emotion(image, emotion_name):
         logger.error(f"Error applying emotion: {str(e)}")
         return None, f"❌ Error: {str(e)}"
 
-def apply_custom_edits(image, rotate_pitch, rotate_yaw, rotate_roll, eyebrow, eyes, eee, aaa, pupil_x, pupil_y):
+def apply_custom_edits(image, rotate_pitch, rotate_yaw, rotate_roll, blink, eyebrow, wink, eyes, eee, aaa, woo, smile, mouth, pupil_x, pupil_y):
     """Apply custom edits using slider values"""
     global engine
     
@@ -163,10 +236,15 @@ def apply_custom_edits(image, rotate_pitch, rotate_yaw, rotate_roll, eyebrow, ey
         'rotate_pitch': rotate_pitch,
         'rotate_yaw': rotate_yaw,
         'rotate_roll': rotate_roll,
+        'blink': blink,
         'eyebrow': eyebrow,
+        'wink': wink,
         'eyes': eyes,
         'eee': eee,
         'aaa': aaa,
+        'woo': woo,
+        'smile': smile,
+        'mouth': mouth,
         'pupil_x': pupil_x,
         'pupil_y': pupil_y
     }
@@ -208,14 +286,19 @@ def update_sliders_from_emotion(emotion_name):
             params['rotate_pitch'],
             params['rotate_yaw'],
             params['rotate_roll'],
+            params['blink'],
             params['eyebrow'],
+            params['wink'],
             params['eyes'],
             params['eee'],
             params['aaa'],
+            params['woo'],
+            params['smile'],
+            params['mouth'],
             params['pupil_x'],
             params['pupil_y']
         )
-    return (0, 0, 0, 0, 0, 0, 0, 0, 0)
+    return (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 def create_interface():
     """Create the Gradio interface"""
@@ -294,55 +377,85 @@ def create_interface():
                 gr.Markdown("### 🎛️ Custom Face Edits")
                 
                 rotate_pitch = gr.Slider(
-                    minimum=-30, maximum=30, value=0, step=0.1,
+                    minimum=-20, maximum=20, value=0, step=0.5,
                     label="Rotate Pitch",
                     info="Head tilt forward/backward"
                 )
                 
                 rotate_yaw = gr.Slider(
-                    minimum=-30, maximum=30, value=0, step=0.1,
+                    minimum=-20, maximum=20, value=0, step=0.5,
                     label="Rotate Yaw",
                     info="Head turn left/right"
                 )
                 
                 rotate_roll = gr.Slider(
-                    minimum=-30, maximum=30, value=0, step=0.1,
+                    minimum=-20, maximum=20, value=0, step=0.5,
                     label="Rotate Roll",
                     info="Head tilt left/right"
                 )
                 
+                blink = gr.Slider(
+                    minimum=-20, maximum=5, value=0, step=0.5,
+                    label="Blink",
+                    info="Eye blinking (negative = closed eyes)"
+                )
+                
                 eyebrow = gr.Slider(
-                    minimum=-20, maximum=20, value=0, step=0.1,
+                    minimum=-10, maximum=15, value=0, step=0.5,
                     label="Eyebrow",
                     info="Eyebrow movement"
                 )
                 
+                wink = gr.Slider(
+                    minimum=0, maximum=25, value=0, step=0.5,
+                    label="Wink",
+                    info="Winking expression"
+                )
+                
                 eyes = gr.Slider(
-                    minimum=-20, maximum=20, value=0, step=0.1,
+                    minimum=-20, maximum=20, value=0, step=0.5,
                     label="Eyes",
                     info="Eye opening/closing"
                 )
                 
                 eee = gr.Slider(
-                    minimum=-20, maximum=20, value=0, step=0.1,
+                    minimum=-20, maximum=15, value=0, step=0.2,
                     label="EEE",
                     info="Mouth shape for 'eee' sound"
                 )
                 
                 aaa = gr.Slider(
-                    minimum=-30, maximum=100, value=0, step=0.1,
+                    minimum=-30, maximum=120, value=0, step=1,
                     label="AAA",
                     info="Mouth shape for 'aaa' sound"
                 )
                 
+                woo = gr.Slider(
+                    minimum=-20, maximum=15, value=0, step=0.2,
+                    label="WOO",
+                    info="Mouth shape for 'woo' sound"
+                )
+                
+                smile = gr.Slider(
+                    minimum=-0.3, maximum=1.3, value=0, step=0.01,
+                    label="Smile",
+                    info="Smile expression"
+                )
+                
+                mouth = gr.Slider(
+                    minimum=-20, maximum=20, value=0, step=0.5,
+                    label="Mouth",
+                    info="General mouth movement"
+                )
+                
                 pupil_x = gr.Slider(
-                    minimum=-10, maximum=10, value=0, step=0.1,
+                    minimum=-15, maximum=15, value=0, step=0.5,
                     label="Pupil X",
                     info="Pupil horizontal movement"
                 )
                 
                 pupil_y = gr.Slider(
-                    minimum=-10, maximum=10, value=0, step=0.1,
+                    minimum=-15, maximum=15, value=0, step=0.5,
                     label="Pupil Y",
                     info="Pupil vertical movement"
                 )
@@ -372,7 +485,7 @@ def create_interface():
         
         apply_edits_btn.click(
             fn=apply_custom_edits,
-            inputs=[input_image, rotate_pitch, rotate_yaw, rotate_roll, eyebrow, eyes, eee, aaa, pupil_x, pupil_y],
+            inputs=[input_image, rotate_pitch, rotate_yaw, rotate_roll, blink, eyebrow, wink, eyes, eee, aaa, woo, smile, mouth, pupil_x, pupil_y],
             outputs=[output_image, status_text]
         )
         
@@ -380,7 +493,7 @@ def create_interface():
         emotion_dropdown.change(
             fn=update_sliders_from_emotion,
             inputs=[emotion_dropdown],
-            outputs=[rotate_pitch, rotate_yaw, rotate_roll, eyebrow, eyes, eee, aaa, pupil_x, pupil_y]
+            outputs=[rotate_pitch, rotate_yaw, rotate_roll, blink, eyebrow, wink, eyes, eee, aaa, woo, smile, mouth, pupil_x, pupil_y]
         )
         
         # Initialize models on startup

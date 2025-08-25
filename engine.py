@@ -240,6 +240,9 @@ class Engine:
                     (0, 20, 1, -0.01), (0, 14, 1, -0.02), (0, 17, 1, 0.0065), (0, 17, 2, 0.003),
                     (0, 13, 1, -0.00275), (0, 16, 1, -0.00275), (0, 3, 1, -0.0035), (0, 7, 1, -0.0035)
                 ]),
+                ('mouth', [
+                    (0, 19, 1, 0.001), (0, 19, 2, 0.0001), (0, 17, 1, -0.0001)
+                ]),
                 ('aaa', [
                     (0, 19, 1, 0.001), (0, 19, 2, 0.0001), (0, 17, 1, -0.0001)
                 ]),
@@ -252,6 +255,10 @@ class Engine:
                 ('wink', [
                     (0, 11, 1, 0.001), (0, 13, 1, -0.0003), (0, 17, 0, 0.0003),
                     (0, 17, 1, 0.0003), (0, 3, 1, -0.0003)
+                ]),
+                ('blink', [
+                    (0, 11, 1, -0.001), (0, 13, 1, 0.0003), (0, 15, 1, -0.001), (0, 16, 1, 0.0003),
+                    (0, 1, 1, -0.00025), (0, 2, 1, 0.00025)
                 ]),
                 ('pupil_x', [
                     (0, 11, 0, 0.0007 if params.get('pupil_x', 0) > 0 else 0.001),
@@ -292,12 +299,19 @@ class Engine:
             x_d_new[0, 15, 1] -= params.get('pupil_y', 0) * 0.001
             params['eyes'] = params.get('eyes', 0) - params.get('pupil_y', 0) / 2.
 
+            # Special case for mouth affecting pitch rotation
+            rotate_pitch_adjustment = -params.get('mouth', 0) * 0.05
+            
+            # Special case for wink affecting roll and yaw rotation
+            rotate_roll_adjustment = -params.get('wink', 0) * 0.1
+            rotate_yaw_adjustment = -params.get('wink', 0) * 0.1
+
 
             # Apply rotation
             R_new = get_rotation_matrix(
-                processed_data['x_s_info']['pitch'] + params.get('rotate_pitch', 0),
-                processed_data['x_s_info']['yaw'] + params.get('rotate_yaw', 0),
-                processed_data['x_s_info']['roll'] + params.get('rotate_roll', 0)
+                processed_data['x_s_info']['pitch'] + params.get('rotate_pitch', 0) + rotate_pitch_adjustment,
+                processed_data['x_s_info']['yaw'] + params.get('rotate_yaw', 0) + rotate_yaw_adjustment,
+                processed_data['x_s_info']['roll'] + params.get('rotate_roll', 0) + rotate_roll_adjustment
             )
             x_d_new = processed_data['x_s_info']['scale'] * (x_d_new @ R_new) + processed_data['x_s_info']['t']
 
