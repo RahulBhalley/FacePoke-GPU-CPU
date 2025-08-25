@@ -98,7 +98,7 @@ async def initialize_models_async():
         raise
 
 def apply_emotion(image, emotion_name):
-    """Apply emotion to the uploaded image"""
+    """Apply preset emotion to the uploaded image"""
     global engine
     
     if engine is None:
@@ -139,6 +139,75 @@ def apply_emotion(image, emotion_name):
         logger.error(f"Error applying emotion: {str(e)}")
         return None, f"❌ Error: {str(e)}"
 
+def apply_custom_edits(image, rotate_pitch, rotate_yaw, rotate_roll, eyebrow, eyes, eee, aaa, pupil_x, pupil_y):
+    """Apply custom edits using slider values"""
+    global engine
+    
+    if engine is None:
+        return None, "❌ Models not initialized. Please wait for initialization to complete."
+    
+    if image is None:
+        return None, "❌ Please upload an image first."
+    
+    # Create custom emotion parameters from sliders
+    custom_params = {
+        'rotate_pitch': rotate_pitch,
+        'rotate_yaw': rotate_yaw,
+        'rotate_roll': rotate_roll,
+        'eyebrow': eyebrow,
+        'eyes': eyes,
+        'eee': eee,
+        'aaa': aaa,
+        'pupil_x': pupil_x,
+        'pupil_y': pupil_y
+    }
+    
+    try:
+        # Convert PIL image to bytes
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        img_byte_arr = img_byte_arr.getvalue()
+        
+        # Load image into engine
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            res = loop.run_until_complete(engine.load_image_api(img_byte_arr))
+            
+            # Apply emotion transformation
+            webp_bytes = loop.run_until_complete(
+                engine.transform_image(res['uuid'], custom_params)
+            )
+            
+            # Convert webp bytes back to PIL image
+            result_image = Image.open(io.BytesIO(webp_bytes))
+            
+            return result_image, f"✅ Applied custom edits successfully!"
+            
+        finally:
+            loop.close()
+            
+    except Exception as e:
+        logger.error(f"Error applying custom edits: {str(e)}")
+        return None, f"❌ Error: {str(e)}"
+
+def update_sliders_from_emotion(emotion_name):
+    """Update slider values when emotion is selected"""
+    if emotion_name in EMOTION_PARAMS:
+        params = EMOTION_PARAMS[emotion_name]
+        return (
+            params['rotate_pitch'],
+            params['rotate_yaw'],
+            params['rotate_roll'],
+            params['eyebrow'],
+            params['eyes'],
+            params['eee'],
+            params['aaa'],
+            params['pupil_x'],
+            params['pupil_y']
+        )
+    return (0, 0, 0, 0, 0, 0, 0, 0, 0)
+
 def create_interface():
     """Create the Gradio interface"""
     
@@ -147,7 +216,7 @@ def create_interface():
         theme=gr.themes.Soft(),
         css="""
         .gradio-container {
-            max-width: 800px !important;
+            max-width: 1200px !important;
             margin: 0 auto !important;
         }
         """
@@ -169,6 +238,8 @@ def create_interface():
                     height=300
                 )
                 
+                # Emotion section
+                gr.Markdown("### 🎭 Preset Emotions")
                 emotion_dropdown = gr.Dropdown(
                     choices=list(EMOTION_PARAMS.keys()),
                     value="Happy",
@@ -176,7 +247,7 @@ def create_interface():
                     info="Select the emotion to apply to your portrait"
                 )
                 
-                apply_btn = gr.Button(
+                apply_emotion_btn = gr.Button(
                     "🎭 Apply Emotion",
                     variant="primary",
                     size="lg"
@@ -196,6 +267,76 @@ def create_interface():
                     height=300
                 )
         
+        # Custom edits section
+        with gr.Row():
+            with gr.Column(scale=1):
+                # Left side - Preset emotions (already defined above)
+                pass
+            
+            with gr.Column(scale=1):
+                # Right side - Custom sliders
+                gr.Markdown("### 🎛️ Custom Face Edits")
+                
+                rotate_pitch = gr.Slider(
+                    minimum=-30, maximum=30, value=0, step=0.1,
+                    label="Rotate Pitch",
+                    info="Head tilt forward/backward"
+                )
+                
+                rotate_yaw = gr.Slider(
+                    minimum=-30, maximum=30, value=0, step=0.1,
+                    label="Rotate Yaw",
+                    info="Head turn left/right"
+                )
+                
+                rotate_roll = gr.Slider(
+                    minimum=-30, maximum=30, value=0, step=0.1,
+                    label="Rotate Roll",
+                    info="Head tilt left/right"
+                )
+                
+                eyebrow = gr.Slider(
+                    minimum=-20, maximum=20, value=0, step=0.1,
+                    label="Eyebrow",
+                    info="Eyebrow movement"
+                )
+                
+                eyes = gr.Slider(
+                    minimum=-20, maximum=20, value=0, step=0.1,
+                    label="Eyes",
+                    info="Eye opening/closing"
+                )
+                
+                eee = gr.Slider(
+                    minimum=-20, maximum=20, value=0, step=0.1,
+                    label="EEE",
+                    info="Mouth shape for 'eee' sound"
+                )
+                
+                aaa = gr.Slider(
+                    minimum=-30, maximum=100, value=0, step=0.1,
+                    label="AAA",
+                    info="Mouth shape for 'aaa' sound"
+                )
+                
+                pupil_x = gr.Slider(
+                    minimum=-10, maximum=10, value=0, step=0.1,
+                    label="Pupil X",
+                    info="Pupil horizontal movement"
+                )
+                
+                pupil_y = gr.Slider(
+                    minimum=-10, maximum=10, value=0, step=0.1,
+                    label="Pupil Y",
+                    info="Pupil vertical movement"
+                )
+                
+                apply_edits_btn = gr.Button(
+                    "✏️ Apply Edits",
+                    variant="secondary",
+                    size="lg"
+                )
+        
         # Examples
         gr.Markdown("### 💡 Tips")
         gr.Markdown("""
@@ -203,13 +344,27 @@ def create_interface():
         - Make sure the face is well-lit and clearly visible
         - The system works best with high-quality images
         - Supported formats: JPG, PNG, WEBP
+        - Use preset emotions for quick results, or fine-tune with custom sliders
         """)
         
         # Event handlers
-        apply_btn.click(
+        apply_emotion_btn.click(
             fn=apply_emotion,
             inputs=[input_image, emotion_dropdown],
             outputs=[output_image, status_text]
+        )
+        
+        apply_edits_btn.click(
+            fn=apply_custom_edits,
+            inputs=[input_image, rotate_pitch, rotate_yaw, rotate_roll, eyebrow, eyes, eee, aaa, pupil_x, pupil_y],
+            outputs=[output_image, status_text]
+        )
+        
+        # Update sliders when emotion is selected
+        emotion_dropdown.change(
+            fn=update_sliders_from_emotion,
+            inputs=[emotion_dropdown],
+            outputs=[rotate_pitch, rotate_yaw, rotate_roll, eyebrow, eyes, eee, aaa, pupil_x, pupil_y]
         )
         
         # Initialize models on startup
