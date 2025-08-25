@@ -6,9 +6,14 @@ config dataclass used for inference
 
 import os
 import os.path as osp
+import logging
 from dataclasses import dataclass
 from typing import Literal, Tuple
 from .base_config import PrintableConfig, make_abs_path
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Configuration
 DATA_ROOT = os.environ.get('DATA_ROOT', '/tmp/data')
@@ -36,10 +41,22 @@ class InferenceConfig(PrintableConfig):
         force_cpu = os.environ.get('FACEPOKE_FORCE_CPU', '0') == '1'
         self.use_cpu = self.use_cpu or force_cpu
         
-        # Set device based on use_cpu flag and CUDA availability
-        self.device_id = "cpu" if self.use_cpu else ("cuda" if torch.cuda.is_available() else "cpu")
-        # Enable half precision only on GPU
-        self.flag_use_half_precision = (self.device_id == "cuda")
+        # Set device based on use_cpu flag and available accelerators
+        if self.use_cpu:
+            self.device_id = "cpu"
+            logger.info("🔧 Forcing CPU usage as requested")
+        elif torch.backends.mps.is_available():
+            self.device_id = "mps"
+            logger.info("🚀 Using MPS (Metal Performance Shaders) for Apple Silicon")
+        elif torch.cuda.is_available():
+            self.device_id = "cuda"
+            logger.info("🚀 Using CUDA GPU")
+        else:
+            self.device_id = "cpu"
+            logger.info("🚀 Using CPU (no GPU acceleration available)")
+        
+        # Enable half precision only on GPU (CUDA or MPS)
+        self.flag_use_half_precision = (self.device_id in ["cuda", "mps"])
 
     flag_lip_zero: bool = True  # whether let the lip to close state before animation, only take effect when flag_eye_retargeting and flag_lip_retargeting is False
     lip_zero_threshold: float = 0.03

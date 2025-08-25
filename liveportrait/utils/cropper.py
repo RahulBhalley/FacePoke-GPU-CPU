@@ -43,7 +43,16 @@ class Cropper(object):
         log("  ⏳ Initializing landmark runner...")
         # Get device from kwargs or default to auto-detect
         use_cpu = kwargs.get('use_cpu', False)
-        onnx_provider = 'CPUExecutionProvider' if use_cpu else ('CUDAExecutionProvider' if torch.cuda.is_available() else 'CPUExecutionProvider')
+        
+        # ONNX Runtime doesn't have native MPS support, so we use CPU for ONNX operations
+        # even when PyTorch is using MPS
+        if use_cpu or (hasattr(torch.backends, 'mps') and torch.backends.mps.is_available()):
+            onnx_provider = 'CPUExecutionProvider'
+            providers = ["CPUExecutionProvider"]
+        else:
+            onnx_provider = 'CUDAExecutionProvider' if torch.cuda.is_available() else 'CPUExecutionProvider'
+            providers = ["CUDAExecutionProvider"] if torch.cuda.is_available() else ["CPUExecutionProvider"]
+        
         self.landmark_runner = LandmarkRunner(
             ckpt_path=make_abs_path(os.path.join(MODELS_DIR, "liveportrait", "landmark.onnx")),
             onnx_provider=onnx_provider,
@@ -55,7 +64,6 @@ class Cropper(object):
         log("  ✅ Landmark runner warmup complete")
 
         log("  ⏳ Initializing face analysis...")
-        providers = ["CPUExecutionProvider"] if use_cpu else (["CUDAExecutionProvider"] if torch.cuda.is_available() else ["CPUExecutionProvider"])
         self.face_analysis_wrapper = FaceAnalysisDIY(
             name='buffalo_l',
             root=make_abs_path(os.path.join(MODELS_DIR, "insightface")),

@@ -13,7 +13,21 @@ logger = logging.getLogger(__name__)
 # Configuration
 DATA_ROOT = os.environ.get('DATA_ROOT', '/tmp/data')
 MODELS_DIR = os.path.join(DATA_ROOT, "models")
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Device selection with MPS support for Apple Silicon
+def get_device():
+    """Get the best available device: MPS > CUDA > CPU"""
+    if torch.backends.mps.is_available():
+        logger.info("🚀 Using MPS (Metal Performance Shaders) for Apple Silicon")
+        return torch.device("mps")
+    elif torch.cuda.is_available():
+        logger.info("🚀 Using CUDA GPU")
+        return torch.device("cuda")
+    else:
+        logger.info("🚀 Using CPU (no GPU acceleration available)")
+        return torch.device("cpu")
+
+DEVICE = get_device()
 
 # Hugging Face repository information
 HF_REPO_ID = "jbilcke-hf/model-cocktail"

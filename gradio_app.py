@@ -4,12 +4,15 @@ Simple Gradio Interface for FacePoke
 A clean, simple interface for the FacePoke portrait animation system.
 """
 
+import os
+# Enable MPS fallback to CPU for unsupported operations
+os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+
 import gradio as gr
 import asyncio
 import logging
 from PIL import Image
 import io
-import os
 import sys
 
 # Add the current directory to Python path
@@ -92,7 +95,12 @@ async def initialize_models_async():
         logger.info("Initializing models...")
         live_portrait = await initialize_models()
         engine = Engine(live_portrait=live_portrait)
-        logger.info("✅ Models initialized successfully")
+        
+        # Get device information
+        device_info = str(engine.device)
+        logger.info(f"✅ Models initialized successfully on {device_info}")
+        
+        return f"✅ Models initialized successfully on {device_info}"
     except Exception as e:
         logger.error(f"❌ Failed to initialize models: {str(e)}")
         raise
@@ -227,6 +235,13 @@ def create_interface():
         
         Upload a portrait photo and apply different emotions to animate it!
         """)
+        
+        # Device info display
+        device_info = gr.Textbox(
+            label="Device Information",
+            value="Initializing...",
+            interactive=False
+        )
         
         with gr.Row():
             with gr.Column(scale=1):
@@ -368,7 +383,7 @@ def create_interface():
         )
         
         # Initialize models on startup
-        interface.load(initialize_models_async)
+        interface.load(initialize_models_async, outputs=device_info)
     
     return interface
 
