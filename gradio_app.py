@@ -14,6 +14,7 @@ import logging
 from PIL import Image
 import io
 import sys
+import argparse
 
 # Add the current directory to Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -387,21 +388,101 @@ def create_interface():
     
     return interface
 
+def parse_arguments():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description="FacePoke - Simple Portrait Animation with Gradio Interface",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python gradio_app.py                           # Run with default settings
+  python gradio_app.py --port 8080               # Run on port 8080
+  python gradio_app.py --host 127.0.0.1          # Run on localhost only
+  python gradio_app.py --share                   # Enable public sharing
+  python gradio_app.py --force-cpu               # Force CPU usage
+  python gradio_app.py --quiet                   # Run in quiet mode
+        """
+    )
+    
+    # Server settings
+    parser.add_argument(
+        '--host', 
+        type=str, 
+        default="0.0.0.0",
+        help="Server host address (default: 0.0.0.0)"
+    )
+    parser.add_argument(
+        '--port', 
+        type=int, 
+        default=7860,
+        help="Server port (default: 7860)"
+    )
+    parser.add_argument(
+        '--share', 
+        action='store_true',
+        help="Enable public sharing (creates a public URL)"
+    )
+    
+    # Device settings
+    parser.add_argument(
+        '--force-cpu', 
+        action='store_true',
+        help="Force CPU usage even if GPU is available"
+    )
+    
+    # Logging settings
+    parser.add_argument(
+        '--quiet', 
+        action='store_true',
+        help="Run in quiet mode (suppress most output)"
+    )
+    parser.add_argument(
+        '--debug', 
+        action='store_true',
+        help="Enable debug logging"
+    )
+    
+    # Interface settings
+    parser.add_argument(
+        '--show-error', 
+        action='store_true',
+        default=True,
+        help="Show error details in interface (default: True)"
+    )
+    
+    return parser.parse_args()
+
 if __name__ == "__main__":
+    # Parse command line arguments
+    args = parse_arguments()
+    
+    # Configure logging based on arguments
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+    elif args.quiet:
+        logging.getLogger().setLevel(logging.WARNING)
+    
     # Initialize models
     logger.info("Starting FacePoke Gradio app...")
     
     # Check for CPU flag
-    force_cpu = os.environ.get('FACEPOKE_FORCE_CPU', '0') == '1'
+    force_cpu = args.force_cpu or os.environ.get('FACEPOKE_FORCE_CPU', '0') == '1'
     if force_cpu:
         logger.info("🔧 Forcing CPU usage as requested")
+        os.environ['FACEPOKE_FORCE_CPU'] = '1'
+    
+    # Log startup configuration
+    logger.info(f"Server configuration: {args.host}:{args.port}")
+    logger.info(f"Public sharing: {'Enabled' if args.share else 'Disabled'}")
+    logger.info(f"Force CPU: {'Yes' if force_cpu else 'No'}")
+    logger.info(f"Debug mode: {'Enabled' if args.debug else 'Disabled'}")
     
     # Create and launch interface
     interface = create_interface()
     interface.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
-        share=False,
-        show_error=True,
-        quiet=False
+        server_name=args.host,
+        server_port=args.port,
+        share=args.share,
+        show_error=args.show_error,
+        quiet=args.quiet
     )
